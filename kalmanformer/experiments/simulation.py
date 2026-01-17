@@ -202,7 +202,12 @@ def main():
         'x_est_former': x_est_kf_former.squeeze(0).cpu(),
         'x_est_ekf': x_est_ekf.squeeze(0).cpu()
     }
-    torch.save(results, 'kalmanformer/experiments/simulation_results.pt')
+    # Ensure output directory exists
+    output_path = os.path.join(os.path.dirname(__file__), 'simulation_results.pt')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    torch.save(results, output_path)
+    print(f"Results saved to {output_path}")
     
     # Plotting code could go here or in a notebook
     

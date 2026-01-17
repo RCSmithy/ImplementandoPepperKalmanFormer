@@ -61,8 +61,19 @@ python kalmanformer/experiments/simulation.py
 - Prints MSE comparison between KalmanFormer and EKF.
 
 ### 2. Visualization
-After running the simulation, you can visualize the trajectories and errors.
+After running the simulation (locally or on Colab), you can visualize the trajectories and errors.
 (Note: You can use the provided utils or the notebook `notebooks/lorenz_results.ipynb`).
+
+### 3. Google Colab (Recommended for Fast Training)
+If you don't have a powerful GPU locally, use Google Colab:
+1. Upload `kalmanformer_colab.ipynb` to your Google Drive or open it directly from GitHub if supported.
+2. In Colab, go to **Runtime > Change runtime type** and select **T4 GPU** (or better).
+3. Run the cells in order. The notebook will:
+   - Clone this repository.
+   - Install dependencies.
+   - Run the full simulation and training (500 epochs).
+   - Automatically provide a download link for `simulation_results.pt`.
+4. Download the results file and place it in `kalmanformer/experiments/` on your local machine to visualize it.
 
 ```python
 from kalmanformer.utils.visualization import plot_trajectory

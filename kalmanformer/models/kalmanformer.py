@@ -52,9 +52,12 @@ class KalmanFormer(nn.Module):
         # Output Projection to Kalman Gain K (n x m)
         self.gain_proj = nn.Linear(64, state_dim * meas_dim)
         
-        # Initialize to near-zero to start with small gains (relying on prediction)
-        nn.init.normal_(self.gain_proj.weight, mean=0.0, std=1e-5)
+        # Better initialization: use Xavier for faster convergence
+        nn.init.xavier_uniform_(self.gain_proj.weight)
         nn.init.constant_(self.gain_proj.bias, 0.0)
+        
+        # Sliding window size for transformer inputs
+        self.window_size = 20  # Keep last 20 steps instead of all history
         
     def _compute_features(self, 
                           z_k: torch.Tensor, 
@@ -155,26 +158,30 @@ class KalmanFormer(nn.Module):
             dec_feat_k = self.dec_norm(dec_feat_k).unsqueeze(1) # Normalize -> (B, 1, 2m)
             dec_history.append(dec_feat_k)
             
-            # 4. Prepare Transformer Inputs
-            # Encoder Seq: Previous state features (0 to k-1)
-            # Decoder Seq: Current meas features (0 to k)
+            # 4. Prepare Transformer Inputs (with sliding window)
+            # Encoder Seq: Previous state features (last window_size steps)
+            # Decoder Seq: Current meas features (last window_size steps)
             
             if len(enc_history) == 0:
                  # Initial State
                  src = torch.zeros(batch_size, 1, self.enc_input_dim, device=self.device)
             else:
-                 src = torch.cat(enc_history, dim=1) # (B, seq_enc, 2n)
+                 # Use sliding window instead of full history
+                 start_idx = max(0, len(enc_history) - self.window_size)
+                 src = torch.cat(enc_history[start_idx:], dim=1) # (B, seq_enc, 2n)
             
-            tgt = torch.cat(dec_history, dim=1) # (B, seq_dec, 2m)
+            # Same for decoder
+            start_idx_dec = max(0, len(dec_history) - self.window_size)
+            tgt = torch.cat(dec_history[start_idx_dec:], dim=1) # (B, seq_dec, 2m)
             
             # Run Transformer
             # We want K_k corresponding to the last step
             out = self.transformer(src, tgt) # (B, seq_dec, d_model)
             
-            # Project to Gain
+            # Project to Gain and bound it with sigmoid
             # Take last output
             last_out = out[:, -1, :] # (B, d_model)
-            K_k_flat = self.gain_proj(last_out)
+            K_k_flat = torch.sigmoid(self.gain_proj(last_out))  # Bound K between 0 and 1
             K_k = K_k_flat.view(batch_size, self.n, self.m)
             
             # 5. Hybrid Update

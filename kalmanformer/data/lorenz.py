@@ -55,7 +55,7 @@ class LorenzSystem:
         return J
 
     def taylor_step(self, x: torch.Tensor, J_order: int = 5) -> torch.Tensor:
-        """
+        r"""
         Integrate using Taylor Expansion of order J_order.
         x_{k+1} = x_k + Sum_{j=1}^J (1/j!) * D^j x * dt^j
         Here we approximate D^j x (j-th derivative wrt time).

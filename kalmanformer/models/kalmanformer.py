@@ -52,8 +52,8 @@ class KalmanFormer(nn.Module):
         # Output Projection to Kalman Gain K (n x m)
         self.gain_proj = nn.Linear(64, state_dim * meas_dim)
         
-        # Better initialization: use Xavier for faster convergence
-        nn.init.xavier_uniform_(self.gain_proj.weight)
+        # Conservative initialization to prevent early explosion
+        nn.init.normal_(self.gain_proj.weight, mean=0.0, std=0.01)
         nn.init.constant_(self.gain_proj.bias, 0.0)
         
         # Sliding window size for transformer inputs
@@ -178,10 +178,10 @@ class KalmanFormer(nn.Module):
             # We want K_k corresponding to the last step
             out = self.transformer(src, tgt) # (B, seq_dec, d_model)
             
-            # Project to Gain and bound it with sigmoid
+            # Project to Gain (no activation - let gradient clipping handle stability)
             # Take last output
             last_out = out[:, -1, :] # (B, d_model)
-            K_k_flat = torch.sigmoid(self.gain_proj(last_out))  # Bound K between 0 and 1
+            K_k_flat = self.gain_proj(last_out)
             K_k = K_k_flat.view(batch_size, self.n, self.m)
             
             # 5. Hybrid Update

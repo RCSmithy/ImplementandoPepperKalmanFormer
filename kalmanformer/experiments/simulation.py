@@ -81,7 +81,7 @@ def main():
     SEQ_LEN = 100
     N_TRAIN = 300
     N_VAL = 60
-    BATCH_SIZE = 30
+    BATCH_SIZE = 256 # Optimized for T4 GPU
     
     # Prompt 4.1 Specs
     DT = 0.02 # Smaller step for better stability with RK4
@@ -153,7 +153,7 @@ def main():
     # Training
     print("Training KalmanFormer...")
     kf_former.to(device)
-    history = train_model(kf_former, train_loader, val_loader, epochs=200, lr=1e-3, device=device)
+    history = train_model(kf_former, train_loader, val_loader, epochs=500, lr=1e-3, device=device)
     
     # Evaluation on one sequence
     print("Evaluating...")

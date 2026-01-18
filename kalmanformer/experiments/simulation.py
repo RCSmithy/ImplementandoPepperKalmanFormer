@@ -153,7 +153,8 @@ def main():
     # Training
     print("Training KalmanFormer...")
     kf_former.to(device)
-    history = train_model(kf_former, train_loader, val_loader, epochs=500, lr=1e-3, device=device)
+    # Reduced LR to help convergence on chaotic data
+    history = train_model(kf_former, train_loader, val_loader, epochs=500, lr=1e-4, device=device)
     
     # Evaluation on one sequence
     print("Evaluating...")

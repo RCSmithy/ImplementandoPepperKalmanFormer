@@ -252,7 +252,7 @@ class KalmanFormer(nn.Module):
             P_est = P_new
             z_prev = z_k
             
-        return torch.stack(estimates, dim=1)
+        return torch.stack(estimates, dim=1).squeeze(-1)
 
 
 # ## Resumen del Flujo Completo

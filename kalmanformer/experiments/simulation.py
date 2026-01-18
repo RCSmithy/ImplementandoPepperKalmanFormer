@@ -81,7 +81,7 @@ def main():
     SEQ_LEN = 100
     N_TRAIN = 300
     N_VAL = 60
-    BATCH_SIZE = 64 # Reduced from 256 to avoid CUDA OOM (256 was too aggressive for full BPTT)
+    BATCH_SIZE = 128 # Increased to 128 (Est. VRAM usage ~11.5GB/15GB)
     
     # Prompt 4.1 Specs
     DT = 0.02 # Smaller step for better stability with RK4

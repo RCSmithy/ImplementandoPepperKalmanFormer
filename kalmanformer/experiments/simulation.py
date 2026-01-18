@@ -85,7 +85,7 @@ def main():
     
     # Prompt 4.1 Specs
     DT = 0.02 # Smaller step for better stability with RK4
-    SIGMA_LORENZ = 10.0 # Standard chaotic value
+    SIGMA_LORENZ = 2.0 # Reduced chaos for validation (was 10.0)
     # SIGMA_LORENZ = 0.05 Was too slow/stable 
     
     Q_STD = 0.8

@@ -88,8 +88,8 @@ def main():
     SIGMA_LORENZ = 2.0 # Reduced chaos for validation (was 10.0)
     # SIGMA_LORENZ = 0.05 Was too slow/stable 
     
-    Q_STD = 0.8
-    R_STD = 1.0
+    Q_STD = 0.01  # Minimal process noise (validation: was 0.8)
+    R_STD = 0.01  # Minimal measurement noise (validation: was 1.0)
     
     print("Generating Data...")
     # Train
@@ -154,7 +154,7 @@ def main():
     print("Training KalmanFormer...")
     kf_former.to(device)
     # Reduced LR to help convergence on chaotic data
-    history = train_model(kf_former, train_loader, val_loader, epochs=500, lr=1e-4, device=device)
+    history = train_model(kf_former, train_loader, val_loader, epochs=50, lr=1e-4, device=device)
     
     # Evaluation on one sequence
     print("Evaluating...")

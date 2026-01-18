@@ -5,6 +5,10 @@ def compute_loss(x_est_seq: torch.Tensor, x_true_seq: torch.Tensor, model: nn.Mo
     """
     Computes (1/T) * Sum ||x_est - x_true||^2 + lambda * ||Theta||^2
     """
+    # Ensure shapes match (squeeze target if it has extra last dim)
+    if x_true_seq.dim() == x_est_seq.dim() + 1 and x_true_seq.shape[-1] == 1:
+        x_true_seq = x_true_seq.squeeze(-1)
+        
     # MSE
     mse = nn.MSELoss()(x_est_seq, x_true_seq)
     

@@ -10,7 +10,7 @@ def train_model(model: nn.Module,
                 val_loader: DataLoader,
                 epochs: int = 200, 
                 lr: float = 1e-3, 
-                weight_decay: float = 1e-3,
+                weight_decay: float = 1e-5,
                 device: str = 'cpu') -> dict:
     
     model.to(device)

@@ -45,6 +45,10 @@ class KalmanFormer(nn.Module):
             d_ff=64
         )
         
+        # Input Normalization
+        self.enc_norm = nn.LayerNorm(self.enc_input_dim)
+        self.dec_norm = nn.LayerNorm(self.dec_input_dim)
+        
         # Output Projection to Kalman Gain K (n x m)
         self.gain_proj = nn.Linear(64, state_dim * meas_dim)
         
@@ -147,7 +151,8 @@ class KalmanFormer(nn.Module):
             # 3. Compute Decoder Feature for Step k
             Delta_z = z_k - z_prev
             delta_z = z_k - z_pred_val
-            dec_feat_k = torch.cat([Delta_z.squeeze(-1), delta_z.squeeze(-1)], dim=-1).unsqueeze(1) # (B, 1, 2m)
+            dec_feat_k = torch.cat([Delta_z.squeeze(-1), delta_z.squeeze(-1)], dim=-1) # (B, 2m)
+            dec_feat_k = self.dec_norm(dec_feat_k).unsqueeze(1) # Normalize -> (B, 1, 2m)
             dec_history.append(dec_feat_k)
             
             # 4. Prepare Transformer Inputs
@@ -230,7 +235,8 @@ class KalmanFormer(nn.Module):
             Delta_x_tilde = x_new - x_est_prev
             Delta_x_hat = x_new - x_pred
             
-            enc_feat_k = torch.cat([Delta_x_tilde.squeeze(-1), Delta_x_hat.squeeze(-1)], dim=-1).unsqueeze(1)
+            enc_feat_k = torch.cat([Delta_x_tilde.squeeze(-1), Delta_x_hat.squeeze(-1)], dim=-1) # (B, 2n)
+            enc_feat_k = self.enc_norm(enc_feat_k).unsqueeze(1) # Normalize -> (B, 1, 2n)
             enc_history.append(enc_feat_k)
             
             # Update States
@@ -240,3 +246,18 @@ class KalmanFormer(nn.Module):
             z_prev = z_k
             
         return torch.stack(estimates, dim=1)
+
+
+# ## Resumen del Flujo Completo
+# ```
+# Para cada paso k:
+#   1. EKF predice: x_pred, P_pred
+#   2. Calcula características: Delta_z, delta_z (decoder)
+#   3. Alimenta Transformer con:
+#      - Encoder: historia de características de estado [0...k-1]
+#      - Decoder: historia de características de medición [0...k]
+#   4. Transformer → K_k (ganancia aprendida)
+#   5. Actualiza: x_new = x_pred + K_k * (z_k - z_pred)
+#   6. Actualiza: P_new usando K_k
+#   7. Calcula características de estado: Delta_x_tilde, Delta_x_hat
+#   8. Añade a historia para siguiente paso
